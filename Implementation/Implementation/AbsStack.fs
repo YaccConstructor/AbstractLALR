@@ -27,6 +27,10 @@ type AbstractStack(_g:AdjacencyGraph<vertex, Edge<vertex>>, state:int) =
                                         Top.Value 
                                     else (-1,-1)) 
                                     and set(v) = Top <- Some(v)
+    member this.topState with get() = if (Top.IsSome) then 
+                                        snd Top.Value
+                                       else -1
+                                    
 
     member this.bot with get() = (if (Bot.IsSome) then 
                                         Bot.Value 
@@ -120,7 +124,7 @@ type AbstractStack(_g:AdjacencyGraph<vertex, Edge<vertex>>, state:int) =
         let pred = new HashSet<vertex>()
         for e in this.graph.Edges do
                 if (e.Target = state) then
-                pred.Add e.Source |> ignore
+                    pred.Add e.Source |> ignore
         pred
 
     member this.Clone = 

@@ -80,7 +80,7 @@ let algo X0 =
     let rec compute (c:Call) state (X:Expression) =
         match X with 
         | Var(a) -> 
-            let CurFlowEq = FlowExpression(a, Var(a))
+            let CurFlowEq = FlowExpression(a, FlowEquations.[a])
 
             if Cache.ContainsKey(Call(CurFlowEq, state)) then
                 Cache.Add(Call(CurFlowEq, state), null)

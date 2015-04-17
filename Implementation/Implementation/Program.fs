@@ -19,22 +19,33 @@ Flow equation, Xi = Ei, denotes the function, Xi : Σ → P( Σ* )
 open AbsStack 
 open FlowExpression
 open System.Collections.Generic
-
+open Microsoft.FSharp.Text.Lexing
+open Microsoft.FSharp.Text.Parsing.ParseHelpers
+open ParserHelper
+open Parser
 open QuickGraph
 open QuickGraph.Algorithms
 open QuickGraph.Collections
+
+let gotoTable = new AssocTable(Parser.tables().gotos, Parser.tables().sparseGotoTableRowOffsets)
+let actionTable = new AssocTable(Parser.tables().actionTableElements, Parser.tables().actionTableRowOffsets)
+
 
 let isFinalState t = false
 let goto a b = 42
 
 let rec reduce state (p: AbstractStack) = 
     let t = p.top
-    let T = 1
+    let action = int (tables().immediateActions.[state])
+
     let R = new HashSet<AbstractStack>()
-    if isFinalState t then
+    if ((actionKind action) = reduceFlag) then
+        let prod = actionValue action 
+                                    
         let newTops = p.predecessor t
         if newTops.Count = 0 then
-            R.Add(AbstractStack(goto state t)) |> ignore
+            let newGotoState = gotoTable.Read(int (tables().productionToNonTerminalTable.[prod]), state)
+            R.Add(AbstractStack(newGotoState)) |> ignore
         else 
             let poppedStack = new HashSet<AbstractStack>()
             for s' in newTops do
@@ -42,14 +53,16 @@ let rec reduce state (p: AbstractStack) =
                 p'.top <- s'
                 poppedStack.Add(p') |> ignore
             for p' in poppedStack do
-                R.Add(p' + AbstractStack(goto p'.top T)) |> ignore
+                let newGotoState = gotoTable.Read(int (tables().productionToNonTerminalTable.[prod]), p'.topState)
+                R.Add(p' + AbstractStack(newGotoState)) |> ignore
+
         //this we optimize in future
         let res = new HashSet<HashSet<AbstractStack>>()
         for p'' in R do
             res.Add (reduce state p'') |> ignore 
         let result = new HashSet<AbstractStack>()
 
-        for r in res do 
+        for r in  res do 
             for i in r do
                 result.Add(i) |> ignore
         result
@@ -62,19 +75,19 @@ let rec reduce state (p: AbstractStack) =
 //global dict of equation
 let FlowEquations =  new Dictionary<string, Expression>()
 
-FlowEquations.Add("X0", Value("a")) |> ignore
-FlowEquations.Add("R" , Value("[")) |> ignore  
+FlowEquations.Add("X0", Value(A)) |> ignore
+FlowEquations.Add("R" , Value(L)) |> ignore  
 FlowEquations.Add("X1", Union(Var("X0"), Var("X2"))) |> ignore   
-FlowEquations.Add("X2", Concat(Concat(Value("["), Var("X1")), Var("X1"))) |> ignore   
+FlowEquations.Add("X2", Concat(Var("X1"), Var("X1"))) |> ignore   
 FlowEquations.Add("X3", Var("X1")) |> ignore
-     
 
+    
+let Cache = new Dictionary<Call, HashSet<AbstractStack>>()
 let algo X0 =
     let W = new List<Call>()
     W.Add(X0)
     let F = new AdjacencyGraph<Call, Edge<Call>>();
     F.AddVertex(X0) |> ignore
-    let Cache = new Dictionary<Call, HashSet<AbstractStack>>()
     
 
     let rec compute (c:Call) state (X:Expression) =
@@ -82,8 +95,9 @@ let algo X0 =
         | Var(a) -> 
             let CurFlowEq = FlowExpression(a, FlowEquations.[a])
 
-            if Cache.ContainsKey(Call(CurFlowEq, state)) then
-                Cache.Add(Call(CurFlowEq, state), null)
+            if not(Cache.ContainsKey(Call(CurFlowEq, state))) then
+                let temp = new HashSet<AbstractStack>()
+                Cache.Add(Call(CurFlowEq, state), temp)
                 F.AddVerticesAndEdge(Edge(Call(CurFlowEq, state), c)) |> ignore
                 W.Add(Call(CurFlowEq, state)) |> ignore
 
@@ -98,11 +112,15 @@ let algo X0 =
                     Result
                 else 
                     let Result = new HashSet<AbstractStack>()
+                    
                     Result.UnionWith Cache.[Call(CurFlowEq, state)] |> ignore
                     Result
 
-        |Value(t) -> 
-            reduce state (AbstractStack(goto state t))
+        | Value(t) -> 
+            let tag = tables().tagOfToken t                      
+            let action = actionTable.Read(state,tag)
+            reduce state (AbstractStack(actionValue action))
+
         | Union(E1,E2) -> 
            let res = (compute c state E1)
            res.UnionWith(compute c state E2)
@@ -137,16 +155,59 @@ let algo X0 =
         W.RemoveAt(0) 
         let X = getEq call
         let P = compute call (getSt call) X
-        if not(P.IsSubsetOf Cache.[call]) then 
-            Cache.[call].UnionWith P
-            for e in F.Edges do
+        
+        if not(Cache.ContainsKey(call)) || not(P.IsSubsetOf Cache.[call]) then 
+              if not(Cache.ContainsKey(call)) then              
+                Cache.Add(call, P) |> ignore
+              else 
+                Cache.[call].UnionWith P
+
+              for e in F.Edges do
                 if (e.Target = call) then
-                    W.Add e.Source
+                   W.Add e.Source
   
     0
 
-                
+let x0 =  Call(FlowExpression("X3", Var("X1")), 0)
+algo x0 |> ignore
 
+if Cache.ContainsKey(x0) then
+    for e in Cache.[x0] do
+        e.print
+    //printfn ""
+(*let currState = 4
+
+let action = 
+        let immediateAction = int (tables().immediateActions.[currState])
+        if not (immediateAction = anyMarker) then
+            // Action has been pre-determined, no need to lookahead 
+            // Expecting it to be a Reduce action on a non-fakeStartNonTerminal ? 
+            immediateAction
+        else
+            let tag = 
+                tables().tagOfToken L
+                                    
+            // Printf.printf "state %d\n" state  
+            actionTable.Read(currState,tag)
+
+printfn "%A - anymarker" (actionKind action = anyMarker)
+printfn "%A - shift" (actionKind action = shiftFlag)
+printfn "%A - reduce" (actionKind action = reduceFlag)
+printfn "%A - error" (actionKind action = errorFlag)
+printfn "%A - accept" (actionKind action = acceptFlag)
+
+let newGotoState1 = actionValue action
+                                        
+printfn "%A" (newGotoState1)
+
+let kind = actionKind action 
+if  kind = reduceFlag then
+    let prod = actionValue action                                     
+    let reduction = tables().reductions.[prod]                                                             
+    let n = int (tables().reductionSymbolCounts.[prod])
+    let newGotoState = gotoTable.Read(int (tables().productionToNonTerminalTable.[prod]), 3)
+    prntfn "%A" (newGotoState)
+    *)
             
             
             

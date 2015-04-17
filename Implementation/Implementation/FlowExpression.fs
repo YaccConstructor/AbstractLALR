@@ -1,7 +1,7 @@
 ﻿module FlowExpression 
 type Expression = 
     | Var of string
-    | Value of string
+    | Value of Parser.token
     | Union of Expression*Expression
     | Concat of Expression*Expression
 

@@ -123,10 +123,18 @@ type AbstractStack(_g:AdjacencyGraph<vertex, Edge<vertex>>, state:int) =
     member this.predecessor state = 
         let pred = new HashSet<vertex>()
         for e in this.graph.Edges do
-                if (e.Target = state) then
-                    pred.Add e.Source |> ignore
+                if (e.Source = state) then
+                    pred.Add e.Target |> ignore
         pred
 
+    member this.pop =
+        let mutable pred = (-1,-1)
+        for e in this.graph.Edges do
+            if (e.Source = this.top) then
+                pred <- e.Target
+     
+        this.top <- pred   
+        
     member this.Clone = 
         let c = new AbstractStack(this.graph.Clone(), -1)
         c.top = this.top |> ignore

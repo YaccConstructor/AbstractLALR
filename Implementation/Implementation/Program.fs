@@ -27,6 +27,17 @@ open QuickGraph
 open QuickGraph.Algorithms
 open QuickGraph.Collections
 
+let EqualCall a b = 
+    (getName a = getName b && getState a = getState b)
+
+let findInGr (gr:AdjacencyGraph<Call, Edge<Call>>) (a: Call) (b: Call) =
+    let mutable flag = false
+    for e in gr.Edges do
+        if (EqualCall e.Source a) && (EqualCall e.Target b) then 
+            flag <- true
+    flag
+
+
 let printFlowGraph (gr:AdjacencyGraph<Call, Edge<Call>>) = 
     let mutable str = "digraph FlowGraph {\nrankdir=RL;\n"
     let CallToString call = 
@@ -40,41 +51,48 @@ let printFlowGraph (gr:AdjacencyGraph<Call, Edge<Call>>) =
                 
 
 let rec reduce state (p: AbstractStack) = 
-    let action = int (tables().immediateActions.[p.topState])
-
+    let t = p.topState
+    let action = int (tables().immediateActions.[t])
+   
     let R = new HashSet<AbstractStack>()
-    if (actionKind action) = reduceFlag then
+
+    if ((actionKind action) = reduceFlag) then
         let prod = actionValue action 
         let n = int (tables().reductionSymbolCounts.[prod])
-        for i in [1..n] do
-            p.pop
-        let t = p.top               
-        let newTops = p.predecessor t
-        if newTops.Count = 0 then
-            let newGotoState = gotoTable.Read(int (tables().productionToNonTerminalTable.[prod]), state)
-            R.Add(AbstractStack(newGotoState)) |> ignore
-        else 
-            let poppedStack = new HashSet<AbstractStack>()
-            for s' in newTops do
-                let p' = p.Clone
-                p'.top <- s'
-                poppedStack.Add(p') |> ignore
-            for p' in poppedStack do
-                let newGotoState = gotoTable.Read(int (tables().productionToNonTerminalTable.[prod]), p'.topState)
-                R.Add(p' + AbstractStack(newGotoState)) |> ignore
+        if p.size >= n then 
+            for i in [1..n] do
+              p.pop
+            let t = p.top               
+            let newTops = p.predecessor t
+            if newTops.Count = 0 then
+               let newGotoState = gotoTable.Read(int (tables().productionToNonTerminalTable.[prod]), state)
+               R.Add(AbstractStack(newGotoState)) |> ignore
+            else 
+               let poppedStack = new HashSet<AbstractStack>()
+               for s' in newTops do
+                   let p' = p.Clone
+                   p'.top <- s'
+                   poppedStack.Add(p') |> ignore
+               for p' in poppedStack do
+                   let newGotoState = gotoTable.Read(int (tables().productionToNonTerminalTable.[prod]), p'.topState)
+                   R.Add(p' + AbstractStack(newGotoState)) |> ignore
 
         //this we optimize in future
-        let res = new HashSet<HashSet<AbstractStack>>()
-        for p'' in R do
-            res.Add (reduce state p'') |> ignore 
-        let result = new HashSet<AbstractStack>()
+            let res = new HashSet<HashSet<AbstractStack>>()
+            for p'' in R do
+                res.Add (reduce state p'') |> ignore 
+            let result = new HashSet<AbstractStack>()
 
-        for r in  res do 
-            for i in r do
-                result.Add(i) |> ignore
-        result
+            for r in  res do 
+                for i in r do
+                    result.Add(i) |> ignore
+            result
          
-     else 
+        else 
+            let result = new HashSet<AbstractStack>()
+            result.Add p |> ignore
+            result
+    else 
         let result = new HashSet<AbstractStack>()
         result.Add p |> ignore
         result
@@ -102,27 +120,32 @@ let algo X0 =
         match X with 
         | Var(a) -> 
             let CurFlowEq = FlowExpression(a, FlowEquations.[a])
+            if not (findInGr F (Call(CurFlowEq, state)) c ) then 
+                    F.AddVerticesAndEdge(Edge(Call(CurFlowEq, state), c)) |> ignore
 
             if not(Cache.ContainsKey(Call(CurFlowEq, state))) then
                 let temp = new HashSet<AbstractStack>()
+
+            
                 Cache.Add(Call(CurFlowEq, state), temp)
-                F.AddVerticesAndEdge(Edge(Call(CurFlowEq, state), c)) |> ignore
                 W.Add(Call(CurFlowEq, state)) |> ignore
 
-            if F.ContainsEdge(Edge(c, Call(CurFlowEq, state)))
-                then 
-                    let t = Cache.[Call(CurFlowEq, state)]
-                    let Result = new HashSet<AbstractStack>()
+            if findInGr F c (Call(CurFlowEq, state)) then 
+                printfn "%A" (printFlowGraph F)
 
-                    for e in t do
-                        e.fold
-                        Result.Add e |> ignore
-                    Result
-                else 
-                    let Result = new HashSet<AbstractStack>()
-                    
-                    Result.UnionWith Cache.[Call(CurFlowEq, state)] |> ignore
-                    Result
+                let t = Cache.[Call(CurFlowEq, state)]
+                let Result = new HashSet<AbstractStack>()
+
+                for e in t do
+                    e.fold
+                    Result.Add e |> ignore
+                
+                Result
+
+            else 
+                let Result = new HashSet<AbstractStack>()
+                Result.UnionWith Cache.[Call(CurFlowEq, state)] |> ignore
+                Result
 
         | Value(t) -> 
             let tag = tables().tagOfToken t                      
@@ -141,7 +164,8 @@ let algo X0 =
                 let P = new HashSet<AbstractStack>()
                 let CalcContE = compute c p.topState E
                 for p' in CalcContE do
-                    P.Add(p + p') |> ignore
+                    
+                    P.Add(p+p') |> ignore
                 P
 
             let CalcE1 = compute c state E1
@@ -152,6 +176,8 @@ let algo X0 =
             let Result = new HashSet<AbstractStack>()
             for p'' in P do 
                 Result.UnionWith (reduce state p'')
+            printfn ""
+
             Result
    
     
@@ -161,29 +187,27 @@ let algo X0 =
         W.RemoveAt(0) 
         let X = getExpression call
         let P = compute call (getState call) X
-        if not(Cache.ContainsKey(call)) || not(P.IsSubsetOf Cache.[call]) then 
-              if not(Cache.ContainsKey(call)) then              
-                Cache.Add(call, P) |> ignore
-              else 
-                Cache.[call].UnionWith P
+        if  not(P.IsSubsetOf Cache.[call]) then  
+              Cache.[call].UnionWith P
 
               for e in F.Edges do
                 if (e.Source = call) then
                    W.Add e.Target
+
     printfn "\n%A\n\n" (printFlowGraph F)
 
     0
 
-let x0 =  Call(FlowExpression("X3", FlowEquations.["X3"]), 0)
+let x0 =  Call(FlowExpression("X2", FlowEquations.["X2"]),0)
 algo x0 |> ignore
 
 if Cache.ContainsKey(x0) then
     for e in Cache.[x0] do
-        printfn "%A" (e.topState)
-    //printfn ""
+        printfn "%A" e.topState   //printfn ""
+        e.print
 
-(*let currState = 4
 
+(*
 let action = 
         let immediateAction = int (tables().immediateActions.[currState])
         if not (immediateAction = anyMarker) then

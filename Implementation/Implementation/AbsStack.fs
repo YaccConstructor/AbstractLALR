@@ -31,7 +31,6 @@ type AbstractStack(_g:AdjacencyGraph<vertex, Edge<vertex>>, state:int) =
                                         snd Top.Value
                                        else -1
                                     
-
     member this.bot with get() = (if (Bot.IsSome) then 
                                         Bot.Value 
                                     else (-1,-1)) 
@@ -126,6 +125,7 @@ type AbstractStack(_g:AdjacencyGraph<vertex, Edge<vertex>>, state:int) =
                 if (e.Source = state) then
                     pred.Add e.Target |> ignore
         pred
+    member this.size = this.graph.VertexCount
 
     member this.pop =
         let mutable pred = (-1,-1)

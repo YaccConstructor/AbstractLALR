@@ -48,7 +48,16 @@ let printFlowGraph (gr:AdjacencyGraph<Call, Edge<Call>>) =
     str <- str + "\n}" 
     str
                                
-                
+
+let isSubsetOf (Q: HashSet<AbstractStack>) (B: HashSet<AbstractStack>) =
+    let mutable mainFlag = true
+    for b in B do
+        let mutable flag = false
+        for a in Q do
+            if a.Equals(b) then
+                flag <- true
+        mainFlag <- (mainFlag && flag)
+    mainFlag
 
 let rec reduce state (p: AbstractStack) = 
     let t = p.topState
@@ -113,25 +122,22 @@ let algo X0 =
     W.Add(X0)
     let F = new AdjacencyGraph<Call, Edge<Call>>();
     F.AddVertex(X0) |> ignore
-    let temp = new HashSet<AbstractStack>()
-    Cache.Add (X0, temp) |> ignore
+    let tr = new HashSet<AbstractStack>()
+    Cache.Add (X0, tr) |> ignore
 
     let rec compute (c:Call) state (X:Expression) =
         match X with 
         | Var(a) -> 
             let CurFlowEq = FlowExpression(a, FlowEquations.[a])
-            if not (findInGr F (Call(CurFlowEq, state)) c ) then 
-                    F.AddVerticesAndEdge(Edge(Call(CurFlowEq, state), c)) |> ignore
+            if not (findInGr F (Call(CurFlowEq, state)) c) then 
+                F.AddVerticesAndEdge(Edge(Call(CurFlowEq, state), c)) |> ignore
 
             if not(Cache.ContainsKey(Call(CurFlowEq, state))) then
                 let temp = new HashSet<AbstractStack>()
-
-            
                 Cache.Add(Call(CurFlowEq, state), temp)
                 W.Add(Call(CurFlowEq, state)) |> ignore
 
             if findInGr F c (Call(CurFlowEq, state)) then 
-                printfn "%A" (printFlowGraph F)
 
                 let t = Cache.[Call(CurFlowEq, state)]
                 let Result = new HashSet<AbstractStack>()
@@ -139,7 +145,7 @@ let algo X0 =
                 for e in t do
                     e.fold
                     Result.Add e |> ignore
-                
+                   
                 Result
 
             else 
@@ -157,6 +163,7 @@ let algo X0 =
            let res = (compute c state E1)
            res.UnionWith(compute c state E2)
            res
+
         | Concat(E1, E2) ->
             let P = new HashSet<AbstractStack>()
            
@@ -164,7 +171,6 @@ let algo X0 =
                 let P = new HashSet<AbstractStack>()
                 let CalcContE = compute c p.topState E
                 for p' in CalcContE do
-                    
                     P.Add(p+p') |> ignore
                 P
 
@@ -176,7 +182,6 @@ let algo X0 =
             let Result = new HashSet<AbstractStack>()
             for p'' in P do 
                 Result.UnionWith (reduce state p'')
-            printfn ""
 
             Result
    
@@ -187,27 +192,27 @@ let algo X0 =
         W.RemoveAt(0) 
         let X = getExpression call
         let P = compute call (getState call) X
-        if  not(P.IsSubsetOf Cache.[call]) then  
+        if  not(isSubsetOf Cache.[call] P) then  
+              
               Cache.[call].UnionWith P
-
               for e in F.Edges do
                 if (e.Source = call) then
                    W.Add e.Target
-
+        
     printfn "\n%A\n\n" (printFlowGraph F)
-
     0
 
-let x0 =  Call(FlowExpression("X2", FlowEquations.["X2"]),0)
+let x0 =  Call(FlowExpression("X3", FlowEquations.["X3"]),0)
 algo x0 |> ignore
+
 
 if Cache.ContainsKey(x0) then
     for e in Cache.[x0] do
-        printfn "%A" e.topState   //printfn ""
-        e.print
+        printfn "%A" e.topState   
 
 
-(*
+//printfn ""
+        (*
 let action = 
         let immediateAction = int (tables().immediateActions.[currState])
         if not (immediateAction = anyMarker) then

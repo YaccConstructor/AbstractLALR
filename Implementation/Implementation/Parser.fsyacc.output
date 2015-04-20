@@ -1,0 +1,98 @@
+Output file describing compiled parser placed in Parser.fs and Parser.fsi
+------------------------
+states = 
+state 0:
+  items:
+    _startS ->  . S
+
+  actions:
+    action 'A' (noprec):   shift 5
+    action 'R' (noprec):   error
+    action 'L' (noprec):   shift 2
+    action 'error' (noprec):   error
+    action '#' (noprec):   error
+    action '$$' (noprec):   error
+
+  immediate action: <none>
+ gotos:
+    goto S: 1
+
+state 1:
+  items:
+    _startS -> S . 
+
+  actions:
+    action 'A' (noprec):   accept
+    action 'R' (noprec):   accept
+    action 'L' (noprec):   accept
+    action 'error' (noprec):   accept
+    action '#' (noprec):   accept
+    action '$$' (noprec):   accept
+
+  immediate action:   accept
+ gotos:
+
+state 2:
+  items:
+    S -> 'L' . S 'R'
+
+  actions:
+    action 'A' (noprec):   shift 5
+    action 'R' (noprec):   error
+    action 'L' (noprec):   shift 2
+    action 'error' (noprec):   error
+    action '#' (noprec):   error
+    action '$$' (noprec):   error
+
+  immediate action: <none>
+ gotos:
+    goto S: 3
+
+state 3:
+  items:
+    S -> 'L' S . 'R'
+
+  actions:
+    action 'A' (noprec):   error
+    action 'R' (noprec):   shift 4
+    action 'L' (noprec):   error
+    action 'error' (noprec):   error
+    action '#' (noprec):   error
+    action '$$' (noprec):   error
+
+  immediate action: <none>
+ gotos:
+
+state 4:
+  items:
+    S -> 'L' S 'R' . 
+
+  actions:
+    action 'A' (noprec):   reduce S --> 'L' S 'R'
+    action 'R' (noprec):   reduce S --> 'L' S 'R'
+    action 'L' (noprec):   reduce S --> 'L' S 'R'
+    action 'error' (noprec):   reduce S --> 'L' S 'R'
+    action '#' (noprec):   reduce S --> 'L' S 'R'
+    action '$$' (noprec):   reduce S --> 'L' S 'R'
+
+  immediate action:   reduce S --> 'L' S 'R'
+ gotos:
+
+state 5:
+  items:
+    S -> 'A' . 
+
+  actions:
+    action 'A' (noprec):   reduce S --> 'A'
+    action 'R' (noprec):   reduce S --> 'A'
+    action 'L' (noprec):   reduce S --> 'A'
+    action 'error' (noprec):   reduce S --> 'A'
+    action '#' (noprec):   reduce S --> 'A'
+    action '$$' (noprec):   reduce S --> 'A'
+
+  immediate action:   reduce S --> 'A'
+ gotos:
+
+
+startStates = 0
+------------------------

@@ -75,3 +75,37 @@ type AssocTable(elemTab:uint16[], offsetTab:uint16[]) =
 
 let gotoTable = new AssocTable(Parser.tables().gotos, Parser.tables().sparseGotoTableRowOffsets)
 let actionTable = new AssocTable(Parser.tables().actionTableElements, Parser.tables().actionTableRowOffsets)
+
+let gotoTerminal state terminal = 
+    let tag = tables().tagOfToken terminal                      
+    let action = actionTable.Read(state,tag)
+    let newState = actionValue action
+    newState
+
+let action state = int (tables().immediateActions.[state])
+        
+let production state = 
+    let prod = actionValue (action state)
+    prod
+
+let reductionSymbolCount state =
+    let n = int (tables().reductionSymbolCounts.[production state])
+    n
+
+let gotoNonTerminal state t = gotoTable.Read(int (tables().productionToNonTerminalTable.[(production t)]), state)
+
+let isAccept state = 
+        let immediateAction = int (tables().immediateActions.[state])
+        if immediateAction <> anyMarker then
+            let kind = actionKind (immediateAction)
+            if kind = acceptFlag then
+                true
+            else false
+        else 
+            let mutable flag = false
+
+            let action = actionTable.Read(state,tables().tagOfToken (EOF))
+            if (actionKind action) = acceptFlag then
+                flag <- true
+            flag  
+

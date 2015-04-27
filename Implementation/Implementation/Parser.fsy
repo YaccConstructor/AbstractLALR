@@ -2,14 +2,14 @@
        
 %}
 
-%token L
 %token R
 %token A
-
+%token L
+%token EOF
 
 %start S
 %type <int> S
 
 %%
 
-S: L S R {1} | A {1}
+S:  L S R {1}| A {1}

@@ -6,9 +6,10 @@ state 0:
     _startS ->  . S
 
   actions:
+    action 'EOF' (noprec):   error
+    action 'L' (noprec):   shift 2
     action 'A' (noprec):   shift 5
     action 'R' (noprec):   error
-    action 'L' (noprec):   shift 2
     action 'error' (noprec):   error
     action '#' (noprec):   error
     action '$$' (noprec):   error
@@ -22,9 +23,10 @@ state 1:
     _startS -> S . 
 
   actions:
+    action 'EOF' (noprec):   accept
+    action 'L' (noprec):   accept
     action 'A' (noprec):   accept
     action 'R' (noprec):   accept
-    action 'L' (noprec):   accept
     action 'error' (noprec):   accept
     action '#' (noprec):   accept
     action '$$' (noprec):   accept
@@ -37,9 +39,10 @@ state 2:
     S -> 'L' . S 'R'
 
   actions:
+    action 'EOF' (noprec):   error
+    action 'L' (noprec):   shift 2
     action 'A' (noprec):   shift 5
     action 'R' (noprec):   error
-    action 'L' (noprec):   shift 2
     action 'error' (noprec):   error
     action '#' (noprec):   error
     action '$$' (noprec):   error
@@ -53,9 +56,10 @@ state 3:
     S -> 'L' S . 'R'
 
   actions:
+    action 'EOF' (noprec):   error
+    action 'L' (noprec):   error
     action 'A' (noprec):   error
     action 'R' (noprec):   shift 4
-    action 'L' (noprec):   error
     action 'error' (noprec):   error
     action '#' (noprec):   error
     action '$$' (noprec):   error
@@ -68,9 +72,10 @@ state 4:
     S -> 'L' S 'R' . 
 
   actions:
+    action 'EOF' (noprec):   reduce S --> 'L' S 'R'
+    action 'L' (noprec):   reduce S --> 'L' S 'R'
     action 'A' (noprec):   reduce S --> 'L' S 'R'
     action 'R' (noprec):   reduce S --> 'L' S 'R'
-    action 'L' (noprec):   reduce S --> 'L' S 'R'
     action 'error' (noprec):   reduce S --> 'L' S 'R'
     action '#' (noprec):   reduce S --> 'L' S 'R'
     action '$$' (noprec):   reduce S --> 'L' S 'R'
@@ -83,9 +88,10 @@ state 5:
     S -> 'A' . 
 
   actions:
+    action 'EOF' (noprec):   reduce S --> 'A'
+    action 'L' (noprec):   reduce S --> 'A'
     action 'A' (noprec):   reduce S --> 'A'
     action 'R' (noprec):   reduce S --> 'A'
-    action 'L' (noprec):   reduce S --> 'A'
     action 'error' (noprec):   reduce S --> 'A'
     action '#' (noprec):   reduce S --> 'A'
     action '$$' (noprec):   reduce S --> 'A'

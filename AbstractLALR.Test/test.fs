@@ -21,7 +21,6 @@ type ``AbstractLALR parser tests`` () =
 
         let x0 =  Call(FlowExpression("X3", FlowEquations1.["X3"]), 0)
         let res = algo x0 FlowEquations1 (CleverParseTable<ParserLAR.token>(ParserLAR.tables()))
-        //Assert.AreEqual (res, Accept)
         Assert.AreEqual (res, Accept)
     [<Test>]
     member this.``The correct bracket sequence without left bracket`` () = 
@@ -35,7 +34,6 @@ type ``AbstractLALR parser tests`` () =
 
         let x0 =  Call(FlowExpression("X3", FlowEquations1.["X3"]), 0)
         let res = algo x0 FlowEquations1 (CleverParseTable<ParserAR.token>(ParserAR.tables()))
-        //Assert.AreEqual (res, Accept)
         Assert.AreEqual (res, Accept)
        
 
@@ -44,3 +42,4 @@ type ``AbstractLALR parser tests`` () =
 let t = new ``AbstractLALR parser tests`` () 
 t.``The correct bracket sequence``() 
 t.``The correct bracket sequence without left bracket``()
+

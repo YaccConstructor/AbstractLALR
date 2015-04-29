@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
 VisualStudioVersion = 12.0.30723.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Implementation", "Implementation\Implementation.fsproj", "{0639E374-E141-43FD-A917-FAF7D05D2286}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "AbstractLALR", "AbstractLALR\AbstractLALR.fsproj", "{7BED4745-32DA-40AF-AA45-4F4CC0F0EC05}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,10 +11,10 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{0639E374-E141-43FD-A917-FAF7D05D2286}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{0639E374-E141-43FD-A917-FAF7D05D2286}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{0639E374-E141-43FD-A917-FAF7D05D2286}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{0639E374-E141-43FD-A917-FAF7D05D2286}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7BED4745-32DA-40AF-AA45-4F4CC0F0EC05}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7BED4745-32DA-40AF-AA45-4F4CC0F0EC05}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7BED4745-32DA-40AF-AA45-4F4CC0F0EC05}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7BED4745-32DA-40AF-AA45-4F4CC0F0EC05}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

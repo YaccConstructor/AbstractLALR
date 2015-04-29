@@ -1,0 +1,14 @@
+%{
+       
+%}
+
+%token R
+%token A
+
+
+%start S
+%type <int> S
+
+%%
+
+S:  S R {1}| A {1}

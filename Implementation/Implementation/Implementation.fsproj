@@ -47,6 +47,10 @@
     <Reference Include="FSharp.Core, Version=$(TargetFSharpCoreVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <Private>True</Private>
     </Reference>
+    <Reference Include="nunit.framework">
+      <HintPath>..\packages\NUnit.2.6.4\lib\nunit.framework.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="QuickGraph">
       <HintPath>..\packages\QuickGraph.3.6.61119.7\lib\net4\QuickGraph.dll</HintPath>
       <Private>True</Private>
@@ -69,13 +73,14 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-    <Compile Include="ParserLAR.fs" />
-    <Compile Include="ParserAR.fs" />
     <Compile Include="ParserHelper.fs" />
     <Compile Include="AbsStack.fs" />
     <Compile Include="FlowExpression.fs" />
-    <Compile Include="Program.fs" />
+    <Compile Include="Algo.fs" />
     <None Include="packages.config" />
+    <Compile Include="ParserLAR.fs" />
+    <Compile Include="ParserAR.fs" />
+    <Compile Include="test.fs" />
   </ItemGroup>
   <PropertyGroup>
     <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>

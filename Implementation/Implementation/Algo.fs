@@ -16,6 +16,8 @@ Flow equation, Xi = Ei, denotes the function, Xi : Σ → P( Σ* )
 
 *)
 
+module AbstractLALR
+
 open AbsStack 
 open FlowExpression
 open System.Collections.Generic
@@ -23,8 +25,6 @@ open System.IO
 open Microsoft.FSharp.Text.Lexing
 open Microsoft.FSharp.Text.Parsing.ParseHelpers
 open ParserHelper
-open ParserLAR
-open ParserAR
 open QuickGraph
 open QuickGraph.Algorithms
 open QuickGraph.Collections
@@ -214,7 +214,7 @@ let algo X0 (flowEquations: Dictionary<string, Expression<_>>) (tables: CleverPa
         |false -> Error
 
     
-let FlowEquations1 =  new Dictionary<string, Expression<ParserLAR.token>>()
+(*let FlowEquations1 =  new Dictionary<string, Expression<ParserLAR.token>>()
 
 FlowEquations1.Add("X0", Value(ParserLAR.A)) |> ignore
 FlowEquations1.Add("R" , Value(ParserLAR.R)) |> ignore  
@@ -239,4 +239,4 @@ printfn "%A" (algo x02 FlowEquations2 (CleverParseTable<ParserAR.token>(ParserAR
 
 
 
-
+*)

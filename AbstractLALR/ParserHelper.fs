@@ -1,10 +1,10 @@
-﻿module ParserHelper
+﻿module ParserHelper 
 
 open Microsoft.FSharp.Text.Lexing
-open Parser
 
 open System
 open System.Collections.Generic
+
 let anyMarker = 0xffff
 let shiftFlag = 0x0000
 let reduceFlag = 0x4000
@@ -72,40 +72,40 @@ type AssocTable(elemTab:uint16[], offsetTab:uint16[]) =
             [ for i in firstElemNumber .. (firstElemNumber+numberOfElements-1) -> int elemTab.[i] ]
 
 
+type CleverParseTable<'T>(tables: Microsoft.FSharp.Text.Parsing.Tables<'T>) =
+    let gotoTable = new AssocTable(tables.gotos, tables.sparseGotoTableRowOffsets)
+    let actionTable = new AssocTable(tables.actionTableElements, tables.actionTableRowOffsets)
 
-let gotoTable = new AssocTable(Parser.tables().gotos, Parser.tables().sparseGotoTableRowOffsets)
-let actionTable = new AssocTable(Parser.tables().actionTableElements, Parser.tables().actionTableRowOffsets)
+    member this.gotoTerminal state terminal = 
+        let tag = tables.tagOfToken terminal                      
+        let action = actionTable.Read(state,tag)
+        let newState = actionValue action
+        newState
 
-let gotoTerminal state terminal = 
-    let tag = tables().tagOfToken terminal                      
-    let action = actionTable.Read(state,tag)
-    let newState = actionValue action
-    newState
-
-let action state = int (tables().immediateActions.[state])
+    member this.action state = int (tables.immediateActions.[state])
         
-let production state = 
-    let prod = actionValue (action state)
-    prod
+    member this.production state = 
+        let prod = actionValue (this.action state)
+        prod
 
-let reductionSymbolCount state =
-    let n = int (tables().reductionSymbolCounts.[production state])
-    n
+    member this.reductionSymbolCount state =
+        let n = int (tables.reductionSymbolCounts.[this.production state])
+        n
 
-let gotoNonTerminal state t = gotoTable.Read(int (tables().productionToNonTerminalTable.[(production t)]), state)
+    member this.gotoNonTerminal state t = gotoTable.Read(int (tables.productionToNonTerminalTable.[(this.production t)]), state)
 
-let isAccept state = 
-        let immediateAction = int (tables().immediateActions.[state])
-        if immediateAction <> anyMarker then
-            let kind = actionKind (immediateAction)
-            if kind = acceptFlag then
-                true
-            else false
-        else 
-            let mutable flag = false
+    member this.isAccept state = 
+            let immediateAction = int (tables.immediateActions.[state])
+            if immediateAction <> anyMarker then
+                let kind = actionKind (immediateAction)
+                if kind = acceptFlag then
+                    true
+                else false
+            else 
+                let mutable flag = false
 
-            let action = actionTable.Read(state,tables().tagOfToken (EOF))
-            if (actionKind action) = acceptFlag then
-                flag <- true
-            flag  
+                let action = actionTable.Read(state, tables.endOfInputTag )
+                if (actionKind action) = acceptFlag then
+                    flag <- true
+                flag  
 

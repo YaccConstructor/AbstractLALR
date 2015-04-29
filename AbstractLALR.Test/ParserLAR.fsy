@@ -5,7 +5,7 @@
 %token R
 %token A
 %token L
-%token EOF
+
 
 %start S
 %type <int> S

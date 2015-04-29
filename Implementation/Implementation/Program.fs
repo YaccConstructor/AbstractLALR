@@ -23,7 +23,8 @@ open System.IO
 open Microsoft.FSharp.Text.Lexing
 open Microsoft.FSharp.Text.Parsing.ParseHelpers
 open ParserHelper
-open Parser
+open ParserLAR
+open ParserAR
 open QuickGraph
 open QuickGraph.Algorithms
 open QuickGraph.Collections
@@ -33,7 +34,7 @@ type result = Accept | Error
 
 // a - source 
 // b - target
-let findCallInGraph (gr:AdjacencyGraph<Call, Edge<Call>>) (a: Call) (b: Call) =
+let findCallInGraph (gr:AdjacencyGraph<Call<_>, Edge<Call<_>>>) (a: Call<_>) (b: Call<_>) =
     let mutable flag = false
     for e in gr.Edges do
         if (EqualCall e.Source a) && (EqualCall e.Target b) then 
@@ -41,7 +42,7 @@ let findCallInGraph (gr:AdjacencyGraph<Call, Edge<Call>>) (a: Call) (b: Call) =
     flag
 
 
-let printFlowGraph (gr:AdjacencyGraph<Call, Edge<Call>>) (filename: string) = 
+let printFlowGraph (gr:AdjacencyGraph<Call<_>, Edge<Call<_>>>) (filename: string) = 
     use file = new StreamWriter(filename)
     file.WriteLine("digraph FlowGraph {\nrankdir=RL;")
     let CallToString call = 
@@ -61,74 +62,70 @@ let isSubsetOf (Q: HashSet<AbstractStack>) (B: HashSet<AbstractStack>) =
         mainFlag <- (mainFlag && flag)
     mainFlag
 
-let rec reduce state (p: AbstractStack) = 
-
-    let isReadyForReduce state (p: AbstractStack)  = 
-        match (actionKind (action state)) = reduceFlag with
-            | true -> 
-                let n = reductionSymbolCount state
-                if p.size >= n then 
-                    true
-                else 
-                    false
-
-            | false -> false
-    
-    let t = p.topState
-    let R = new HashSet<AbstractStack>()
-
-    match isReadyForReduce t p with
-        | true ->      
-            let n = reductionSymbolCount t
-            for i in [1..n] do
-              p.pop
-
-            let nTop = p.top               
-            let newTops = p.predecessor nTop
-            if newTops.Count = 0 then
-               let newGotoState = gotoNonTerminal state t 
-               R.Add(AbstractStack(newGotoState)) |> ignore
-            else 
-               let poppedStack = new HashSet<AbstractStack>()
-               for s' in newTops do
-                   let p' = p.Clone
-                   p'.top <- s'
-                   poppedStack.Add(p') |> ignore
-
-               for p' in poppedStack do
-                   let newGotoState = gotoTable.Read(int (tables().productionToNonTerminalTable.[production state]), p'.topState)
-                   R.Add(p' + AbstractStack(newGotoState)) |> ignore
-
-            let result = new HashSet<AbstractStack>()
-            for p'' in R do
-                result.UnionWith (reduce state p'') |> ignore 
-            result
-         
-        | false -> 
-            let result = new HashSet<AbstractStack>()
-            result.Add p |> ignore
-            result
-     
 
 //global dict of equations
-let FlowEquations =  new Dictionary<string, Expression>()
 
-FlowEquations.Add("X0", Value(A)) |> ignore
-FlowEquations.Add("R" , Value(R)) |> ignore  
-FlowEquations.Add("X1", Var("X0") ++ Var("X2")) |> ignore   
-FlowEquations.Add("X2", Value(L) +. (Var("X1") +. Var("R"))) |> ignore   
-FlowEquations.Add("X3", Var("X1")) |> ignore
 
-let Cache = new Dictionary<Call, HashSet<AbstractStack>>()
-let algo X0 (flowEquations: Dictionary<string, Expression>)  =
-    let W = new List<Call>()
+let algo X0 (flowEquations: Dictionary<string, Expression<_>>) (tables: CleverParseTable<_>)  =
+    let Cache = new Dictionary<Call<_>, HashSet<AbstractStack>>()
+    let W = new List<Call<_>>()
     W.Add(X0)
-    let F = new AdjacencyGraph<Call, Edge<Call>>();
+    let F = new AdjacencyGraph<Call<_>, Edge<Call<_>>>();
     F.AddVertex(X0) |> ignore
     let tr = new HashSet<AbstractStack>()
     Cache.Add (X0, tr) |> ignore
 
-    let rec compute (c:Call) state (X:Expression) =
+    
+    let rec reduce state (p: AbstractStack) = 
+
+        let isReadyForReduce state (p: AbstractStack)  = 
+            match (actionKind (tables.action state)) = reduceFlag with
+                | true -> 
+                    let n = tables.reductionSymbolCount state
+                    if p.size >= n then 
+                        true
+                    else 
+                        false
+
+                | false -> false
+    
+        let t = p.topState
+        let R = new HashSet<AbstractStack>()
+
+        match isReadyForReduce t p with
+            | true ->      
+                let n = tables.reductionSymbolCount t
+                for i in [1..n] do
+                  p.pop
+
+                let nTop = p.top               
+                let newTops = p.predecessor nTop
+                if newTops.Count = 0 then
+                   let newGotoState = tables.gotoNonTerminal state t 
+                   R.Add(AbstractStack(newGotoState)) |> ignore
+                else 
+                   let poppedStack = new HashSet<AbstractStack>()
+                   for s' in newTops do
+                       let p' = p.Clone
+                       p'.top <- s'
+                       poppedStack.Add(p') |> ignore
+
+                   for p' in poppedStack do
+                       let newGotoState = tables.gotoNonTerminal p'.topState state 
+                       R.Add(p' + AbstractStack(newGotoState)) |> ignore
+
+                let result = new HashSet<AbstractStack>()
+                for p'' in R do
+                    result.UnionWith (reduce state p'') |> ignore 
+                result
+         
+            | false -> 
+                let result = new HashSet<AbstractStack>()
+                result.Add p |> ignore
+                result
+     
+
+    let rec compute (c:Call<_>) state (X:Expression<_>) =
         match X with 
         | Var(a) -> 
             let CurFlowEq = FlowExpression(a, flowEquations.[a])
@@ -157,7 +154,7 @@ let algo X0 (flowEquations: Dictionary<string, Expression>)  =
                 Result
 
         | Value(t) -> 
-            reduce state (AbstractStack(gotoTerminal state t))
+            reduce state (AbstractStack(tables.gotoTerminal state t))
 
         | Union(E1,E2) -> 
            let res = (compute c state E1)
@@ -167,7 +164,7 @@ let algo X0 (flowEquations: Dictionary<string, Expression>)  =
         | Concat(E1, E2) ->
             let P = new HashSet<AbstractStack>()
            
-            let continueOperator (c:Call) (p: AbstractStack) (E: Expression) =
+            let continueOperator (c:Call<_>) (p: AbstractStack) (E: Expression<_>) =
                 let P = new HashSet<AbstractStack>()
                 let CalcContE = compute c p.topState E
                 for p' in CalcContE do
@@ -207,7 +204,8 @@ let algo X0 (flowEquations: Dictionary<string, Expression>)  =
         let mutable flag = true
         if Cache.ContainsKey(X0) then
             for e in Cache.[X0] do
-               if not (isAccept e.topState) then
+               
+               if not (tables.isAccept e.topState) then
                    flag <- false
         flag
     
@@ -216,8 +214,29 @@ let algo X0 (flowEquations: Dictionary<string, Expression>)  =
         |false -> Error
 
     
+let FlowEquations1 =  new Dictionary<string, Expression<ParserLAR.token>>()
 
-let x0 =  Call(FlowExpression("X3", FlowEquations.["X3"]), 0)
-printfn "%A" (algo x0 FlowEquations) 
+FlowEquations1.Add("X0", Value(ParserLAR.A)) |> ignore
+FlowEquations1.Add("R" , Value(ParserLAR.R)) |> ignore  
+FlowEquations1.Add("X1", Var("X0") ++ Var("X2")) |> ignore   
+FlowEquations1.Add("X2", Value(ParserLAR.L) +. (Var("X1") +. Var("R"))) |> ignore   
+FlowEquations1.Add("X3", Var("X1")) |> ignore
+
+let x0 =  Call(FlowExpression("X3", FlowEquations1.["X3"]), 0)
+printfn "%A" (algo x0 FlowEquations1 (CleverParseTable<ParserLAR.token>(ParserLAR.tables())))
+
+
+let FlowEquations2 =  new Dictionary<string, Expression<ParserAR.token>>()
+
+FlowEquations2.Add("X0", Value(ParserAR.A)) |> ignore
+FlowEquations2.Add("R" , Value(ParserAR.R)) |> ignore  
+FlowEquations2.Add("X1", Var("X0") ++ Var("X2")) |> ignore   
+FlowEquations2.Add("X2", (Var("X1") +. Var("R"))) |> ignore   
+FlowEquations2.Add("X3", Var("X1")) |> ignore
+
+let x02 =  Call(FlowExpression("X3", FlowEquations2.["X3"]), 0)
+printfn "%A" (algo x02 FlowEquations2 (CleverParseTable<ParserAR.token>(ParserAR.tables())))
+
+
 
 

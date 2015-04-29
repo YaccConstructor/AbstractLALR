@@ -69,7 +69,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-    <Compile Include="Parser.fs" />
+    <Compile Include="ParserLAR.fs" />
+    <Compile Include="ParserAR.fs" />
     <Compile Include="ParserHelper.fs" />
     <Compile Include="AbsStack.fs" />
     <Compile Include="FlowExpression.fs" />

@@ -3,7 +3,7 @@ module ParserLAR
 #nowarn "64";; // turn off warnings that type variables used in production annotations are instantiated to concrete type
 open Microsoft.FSharp.Text.Lexing
 open Microsoft.FSharp.Text.Parsing.ParseHelpers
-# 1 "Parser.fsy"
+# 1 "ParserLAR.fsy"
 
        
 
@@ -92,20 +92,20 @@ let _fsyacc_reductions ()  =    [|
             Microsoft.FSharp.Core.Operators.box
                 (
                    (
-# 15 "Parser.fsy"
+# 15 "ParserLAR.fsy"
                                1
                    )
-# 15 "Parser.fsy"
+# 15 "ParserLAR.fsy"
                  : int));
 # 100 "ParserLAR.fs"
         (fun (parseState : Microsoft.FSharp.Text.Parsing.IParseState) ->
             Microsoft.FSharp.Core.Operators.box
                 (
                    (
-# 15 "Parser.fsy"
+# 15 "ParserLAR.fsy"
                                       1
                    )
-# 15 "Parser.fsy"
+# 15 "ParserLAR.fsy"
                  : int));
 |]
 # 111 "ParserLAR.fs"

@@ -88,9 +88,10 @@ type AbstractStack(_g:AdjacencyGraph<vertex, Edge<vertex>>, state:int) =
                 if a.graph.ContainsVertex v then
                     tempBGraph.AddVertex (maxLabel a.graph (snd v) + 1, snd v) |> ignore
                     tempBGraph.RemoveVertex v |> ignore
+                
 
 
-            for e in b.graph.Edges do
+            for e in tempBGraph.Edges do
                 if a.graph.ContainsVertex e.Source then
                     let newSource = (maxLabel a.graph (snd e.Source) + 1, snd e.Source)
                     tempBGraph.AddEdge (Edge(newSource, e.Target)) |> ignore

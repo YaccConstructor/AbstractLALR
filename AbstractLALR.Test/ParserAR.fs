@@ -4,7 +4,7 @@ module ParserAR
 open Microsoft.FSharp.Text.Lexing
 open Microsoft.FSharp.Text.Parsing.ParseHelpers
 # 1 "ParserAR.fsy"
- 
+
        
 
 # 10 "ParserAR.fs"
@@ -87,7 +87,7 @@ let _fsyacc_reductions ()  =    [|
                 (
                    (
 # 14 "ParserAR.fsy"
-                             1
+                              1
                    )
 # 14 "ParserAR.fsy"
                  : int));
@@ -97,7 +97,7 @@ let _fsyacc_reductions ()  =    [|
                 (
                    (
 # 14 "ParserAR.fsy"
-                                    1
+                                     1
                    )
 # 14 "ParserAR.fsy"
                  : int));

@@ -2,18 +2,15 @@
     - goto controller (function)
     - flow-equation schemes 
     - initial call X0(s0)
-
 For implementation this algorithm we need following data structures
     - W - list of calls 
     - F - dynamically generated call graph, consisting of arcs of form, X(s) -> X'(s')
     - Cashe: Call -> P(ParseStack) - dynamic array, mapping calls to sets of parse-stack segments
       (ParseStack - trees, whose nodes are ParseStack and one node is marked - bottom and another one node - top)
       **There is a unique entrym Cache[X[s]] in the cache array <==> X(s), appears in F
-
 Definition:
 Let Σ name the states in the parser’s goto-controller
 Flow equation, Xi = Ei, denotes the function, Xi : Σ → P( Σ* )
-
 *)
 
 module AbstractLALR
@@ -77,7 +74,7 @@ let algo X0 (flowEquations: Dictionary<string, Expression<_>>) (tables: CleverPa
 
     
     let rec reduce state (p: AbstractStack) = 
-
+        
         let isReadyForReduce state (p: AbstractStack)  = 
             match (actionKind (tables.action state)) = reduceFlag with
                 | true -> 
@@ -88,18 +85,23 @@ let algo X0 (flowEquations: Dictionary<string, Expression<_>>) (tables: CleverPa
                         false
 
                 | false -> false
-    
+        
         let t = p.topState
+        
         let R = new HashSet<AbstractStack>()
 
         match isReadyForReduce t p with
-            | true ->      
+            | true ->    
                 let n = tables.reductionSymbolCount t
-                for i in [1..n] do
+                // printfn "Reduce - %A %A" n state 
+                //p.print
+                //printfn "\n"
+                for i = 1 to n - 1 do
                   p.pop
-
+                
                 let nTop = p.top               
                 let newTops = p.predecessor nTop
+                  
                 if newTops.Count = 0 then
                    let newGotoState = tables.gotoNonTerminal state t 
                    R.Add(AbstractStack(newGotoState)) |> ignore
@@ -109,9 +111,9 @@ let algo X0 (flowEquations: Dictionary<string, Expression<_>>) (tables: CleverPa
                        let p' = p.Clone
                        p'.top <- s'
                        poppedStack.Add(p') |> ignore
-
-                   for p' in poppedStack do
-                       let newGotoState = tables.gotoNonTerminal p'.topState state 
+                   for p' in poppedStack do                                           
+                       
+                       let newGotoState = tables.gotoNonTerminal p'.topState t 
                        R.Add(p' + AbstractStack(newGotoState)) |> ignore
 
                 let result = new HashSet<AbstractStack>()
@@ -120,47 +122,41 @@ let algo X0 (flowEquations: Dictionary<string, Expression<_>>) (tables: CleverPa
                 result
          
             | false -> 
+               // printfn "Curr - %A" state 
+               // p.print
+               // printfn "\n"
                 let result = new HashSet<AbstractStack>()
                 result.Add p |> ignore
                 result
      
-
     let rec compute (c:Call<_>) state (X:Expression<_>) =
         match X with 
         | Var(a) -> 
             let CurFlowEq = FlowExpression(a, flowEquations.[a])
             if not (findCallInGraph F (Call(CurFlowEq, state)) c) then 
                 F.AddVerticesAndEdge(Edge(Call(CurFlowEq, state), c)) |> ignore
-
             if not(Cache.ContainsKey(Call(CurFlowEq, state))) then
                 let temp = new HashSet<AbstractStack>()
                 Cache.Add(Call(CurFlowEq, state), temp)
                 W.Add(Call(CurFlowEq, state)) |> ignore
-
             if findCallInGraph F c (Call(CurFlowEq, state)) then 
-
                 let t = Cache.[Call(CurFlowEq, state)]
                 let Result = new HashSet<AbstractStack>()
-
                 for e in t do
                     e.fold
                     Result.Add e |> ignore
                    
                 Result
-
             else 
                 let Result = new HashSet<AbstractStack>()
                 Result.UnionWith Cache.[Call(CurFlowEq, state)] |> ignore
                 Result
-
         | Value(t) -> 
             reduce state (AbstractStack(tables.gotoTerminal state t))
-
         | Union(E1,E2) -> 
            let res = (compute c state E1)
            res.UnionWith(compute c state E2)
            res
-
         | Concat(E1, E2) ->
             let P = new HashSet<AbstractStack>()
            
@@ -168,7 +164,7 @@ let algo X0 (flowEquations: Dictionary<string, Expression<_>>) (tables: CleverPa
                 let P = new HashSet<AbstractStack>()
                 let CalcContE = compute c p.topState E
                 for p' in CalcContE do
-                    P.Add(p+p') |> ignore
+                    P.Add(p + p') |> ignore
                 P
 
             let CalcE1 = compute c state E1
@@ -179,7 +175,6 @@ let algo X0 (flowEquations: Dictionary<string, Expression<_>>) (tables: CleverPa
             let Result = new HashSet<AbstractStack>()
             for p'' in P do 
                 Result.UnionWith (reduce state p'')
-
             Result
    
     use file = new StreamWriter("WorklistLog.txt")
@@ -199,44 +194,16 @@ let algo X0 (flowEquations: Dictionary<string, Expression<_>>) (tables: CleverPa
     
             
             
-
     let checkResult = 
         let mutable flag = true
         if Cache.ContainsKey(X0) then
             for e in Cache.[X0] do
-               
+               //printfn "%A" e.topState
                if not (tables.isAccept e.topState) then
                    flag <- false
         flag
-    
+   
     match checkResult with
         |true -> Accept
         |false -> Error
-
     
-(*let FlowEquations1 =  new Dictionary<string, Expression<ParserLAR.token>>()
-
-FlowEquations1.Add("X0", Value(ParserLAR.A)) |> ignore
-FlowEquations1.Add("R" , Value(ParserLAR.R)) |> ignore  
-FlowEquations1.Add("X1", Var("X0") ++ Var("X2")) |> ignore   
-FlowEquations1.Add("X2", Value(ParserLAR.L) +. (Var("X1") +. Var("R"))) |> ignore   
-FlowEquations1.Add("X3", Var("X1")) |> ignore
-
-let x0 =  Call(FlowExpression("X3", FlowEquations1.["X3"]), 0)
-printfn "%A" (algo x0 FlowEquations1 (CleverParseTable<ParserLAR.token>(ParserLAR.tables())))
-
-
-let FlowEquations2 =  new Dictionary<string, Expression<ParserAR.token>>()
-
-FlowEquations2.Add("X0", Value(ParserAR.A)) |> ignore
-FlowEquations2.Add("R" , Value(ParserAR.R)) |> ignore  
-FlowEquations2.Add("X1", Var("X0") ++ Var("X2")) |> ignore   
-FlowEquations2.Add("X2", (Var("X1") +. Var("R"))) |> ignore   
-FlowEquations2.Add("X3", Var("X1")) |> ignore
-
-let x02 =  Call(FlowExpression("X3", FlowEquations2.["X3"]), 0)
-printfn "%A" (algo x02 FlowEquations2 (CleverParseTable<ParserAR.token>(ParserAR.tables())))
-
-
-
-*)

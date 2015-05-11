@@ -1,0 +1,64 @@
+Output file describing compiled parser placed in ParserAR.fs and ParserAR.fsi
+------------------------
+states = 
+state 0:
+  items:
+    _startS ->  . S
+
+  actions:
+    action 'A' (noprec):   shift 3
+    action 'R' (noprec):   error
+    action 'error' (noprec):   error
+    action '#' (noprec):   error
+    action '$$' (noprec):   error
+
+  immediate action: <none>
+ gotos:
+    goto S: 1
+
+state 1:
+  items:
+    _startS -> S . 
+    S -> S . 'R'
+
+  actions:
+    action 'A' (noprec):   accept
+    action 'R' (noprec):   shift 2
+    action 'error' (noprec):   accept
+    action '#' (noprec):   accept
+    action '$$' (noprec):   accept
+
+  immediate action: <none>
+ gotos:
+
+state 2:
+  items:
+    S -> S 'R' . 
+
+  actions:
+    action 'A' (noprec):   reduce S --> S 'R'
+    action 'R' (noprec):   reduce S --> S 'R'
+    action 'error' (noprec):   reduce S --> S 'R'
+    action '#' (noprec):   reduce S --> S 'R'
+    action '$$' (noprec):   reduce S --> S 'R'
+
+  immediate action:   reduce S --> S 'R'
+ gotos:
+
+state 3:
+  items:
+    S -> 'A' . 
+
+  actions:
+    action 'A' (noprec):   reduce S --> 'A'
+    action 'R' (noprec):   reduce S --> 'A'
+    action 'error' (noprec):   reduce S --> 'A'
+    action '#' (noprec):   reduce S --> 'A'
+    action '$$' (noprec):   reduce S --> 'A'
+
+  immediate action:   reduce S --> 'A'
+ gotos:
+
+
+startStates = 0
+------------------------

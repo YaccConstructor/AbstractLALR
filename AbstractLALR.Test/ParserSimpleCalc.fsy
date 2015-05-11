@@ -1,0 +1,14 @@
+%{
+%}
+%token A
+%token PLUS
+%token MINUS
+
+
+
+%start S
+%type <int> S
+
+%%
+
+S : A PLUS A {1} | A MINUS A { 1}

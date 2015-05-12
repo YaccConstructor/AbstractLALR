@@ -59,6 +59,62 @@ let isSubsetOf (Q: HashSet<AbstractStack>) (B: HashSet<AbstractStack>) =
         mainFlag <- (mainFlag && flag)
     mainFlag
 
+let rec reduce (tables: CleverParseTable<_>) state (p: AbstractStack)  last = 
+        
+    let isReadyForReduce state (p: AbstractStack) last  =     
+        match tables.isReduce state last with
+            | true -> 
+                let n = tables.reductionSymbolCount state last
+                if p.size >= n then 
+                    true
+                else 
+                    false
+
+            | false -> false
+            
+        
+    let t = p.topState
+        
+    let R = new HashSet<AbstractStack>()
+
+    match isReadyForReduce t p last with
+        | true ->    
+            let n = tables.reductionSymbolCount t last
+            // printfn "Reduce - %A %A" n state 
+            //p.print
+            //printfn "\n"
+            for i = 1 to n - 1 do
+                p.pop
+                
+            let nTop = p.top               
+            let newTops = p.predecessor nTop
+                  
+            if newTops.Count = 0 then
+                let newGotoState = tables.gotoNonTerminal state t last
+                R.Add(AbstractStack(newGotoState)) |> ignore
+            else 
+                let poppedStack = new HashSet<AbstractStack>()
+                for s' in newTops do
+                    let p' = p.Clone
+                    p'.top <- s'
+                    poppedStack.Add(p') |> ignore
+                for p' in poppedStack do                                           
+                       
+                    let newGotoState = tables.gotoNonTerminal p'.topState t last
+                    R.Add(p' + AbstractStack(newGotoState)) |> ignore
+
+            let result = new HashSet<AbstractStack>()
+            for p'' in R do
+                result.UnionWith (reduce tables state p'' last) |> ignore 
+            result
+         
+        | false -> 
+            // printfn "Curr - %A" state 
+            // p.print
+            // printfn "\n"
+            let result = new HashSet<AbstractStack>()
+            result.Add p |> ignore
+            result
 
 //global dict of equations
 
@@ -73,61 +129,6 @@ let algo X0 (flowEquations: Dictionary<string, Expression<_>>) (tables: CleverPa
     Cache.Add (X0, tr) |> ignore
 
     
-    let rec reduce state (p: AbstractStack) = 
-        
-        let isReadyForReduce state (p: AbstractStack)  = 
-            match (actionKind (tables.action state)) = reduceFlag with
-                | true -> 
-                    let n = tables.reductionSymbolCount state
-                    if p.size >= n then 
-                        true
-                    else 
-                        false
-
-                | false -> false
-        
-        let t = p.topState
-        
-        let R = new HashSet<AbstractStack>()
-
-        match isReadyForReduce t p with
-            | true ->    
-                let n = tables.reductionSymbolCount t
-                // printfn "Reduce - %A %A" n state 
-                //p.print
-                //printfn "\n"
-                for i = 1 to n - 1 do
-                  p.pop
-                
-                let nTop = p.top               
-                let newTops = p.predecessor nTop
-                  
-                if newTops.Count = 0 then
-                   let newGotoState = tables.gotoNonTerminal state t 
-                   R.Add(AbstractStack(newGotoState)) |> ignore
-                else 
-                   let poppedStack = new HashSet<AbstractStack>()
-                   for s' in newTops do
-                       let p' = p.Clone
-                       p'.top <- s'
-                       poppedStack.Add(p') |> ignore
-                   for p' in poppedStack do                                           
-                       
-                       let newGotoState = tables.gotoNonTerminal p'.topState t 
-                       R.Add(p' + AbstractStack(newGotoState)) |> ignore
-
-                let result = new HashSet<AbstractStack>()
-                for p'' in R do
-                    result.UnionWith (reduce state p'') |> ignore 
-                result
-         
-            | false -> 
-               // printfn "Curr - %A" state 
-               // p.print
-               // printfn "\n"
-                let result = new HashSet<AbstractStack>()
-                result.Add p |> ignore
-                result
      
     let rec compute (c:Call<_>) state (X:Expression<_>) =
         match X with 
@@ -137,6 +138,7 @@ let algo X0 (flowEquations: Dictionary<string, Expression<_>>) (tables: CleverPa
                 F.AddVerticesAndEdge(Edge(Call(CurFlowEq, state), c)) |> ignore
             if not(Cache.ContainsKey(Call(CurFlowEq, state))) then
                 let temp = new HashSet<AbstractStack>()
+                //temp.Add() |> ignore
                 Cache.Add(Call(CurFlowEq, state), temp)
                 W.Add(Call(CurFlowEq, state)) |> ignore
             if findCallInGraph F c (Call(CurFlowEq, state)) then 
@@ -152,7 +154,7 @@ let algo X0 (flowEquations: Dictionary<string, Expression<_>>) (tables: CleverPa
                 Result.UnionWith Cache.[Call(CurFlowEq, state)] |> ignore
                 Result
         | Value(t) -> 
-            reduce state (AbstractStack(tables.gotoTerminal state t))
+            reduce tables state (AbstractStack(tables.gotoTerminal state t)) false
         | Union(E1,E2) -> 
            let res = (compute c state E1)
            res.UnionWith(compute c state E2)
@@ -174,7 +176,7 @@ let algo X0 (flowEquations: Dictionary<string, Expression<_>>) (tables: CleverPa
 
             let Result = new HashSet<AbstractStack>()
             for p'' in P do 
-                Result.UnionWith (reduce state p'')
+                Result.UnionWith (reduce tables state p'' false)
             Result
    
     use file = new StreamWriter("WorklistLog.txt")

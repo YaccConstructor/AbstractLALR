@@ -1,0 +1,23 @@
+%{
+%}
+%token ID
+%token NUM
+%token PLUS
+%token MINUS
+%token L R
+
+
+
+%start S
+%type <int> S
+
+%%
+
+
+
+S: S OP T {1} | T {1}
+OP: PLUS{1} | MINUS {1}
+T: L S R {1} | ID {1} | NUM {1}
+
+
+

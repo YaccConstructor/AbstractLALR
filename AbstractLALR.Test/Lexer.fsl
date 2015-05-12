@@ -1,0 +1,23 @@
+{
+module Lexer
+
+open System
+open ParserEvenCountBracket
+open System.Text
+open Microsoft.FSharp.Text.Lexing
+
+}
+
+
+
+
+let digit = ['0'-'9']
+let ch = ['a'-'z']
+let whitespace = [' ' '\t' '\r' '\n'] | eof
+
+rule token = parse
+| whitespace { token lexbuf }
+| ")" { R }
+| "(" { L }
+| "B" { B }
+| _ { failwithf "unexpected input" }

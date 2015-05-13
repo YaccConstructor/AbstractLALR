@@ -83,7 +83,7 @@ type ``AbstractLALR parser tests`` () =
          Assert.AreEqual (res, ans) 
     [<Test>]
     member this.``The an even number of brackets: Example (b)(b) or (b)(b)(b)(b) Magic EOF``  () = 
-         //a Shift-Reduce conflict which algorithm is not able to resolve on their own
+
          let FlowEquations1 =  new Dictionary<string, Expression<ParserEvenCountBracketMagicEOF.token>>()
 
          FlowEquations1.Add("X0", Value(ParserEvenCountBracketMagicEOF.L) +. Value(ParserEvenCountBracketMagicEOF.B) +. Value(ParserEvenCountBracketMagicEOF.R))
@@ -92,8 +92,7 @@ type ``AbstractLALR parser tests`` () =
          let x0 =  Call(FlowExpression("X1", FlowEquations1.["X1"]), 0)
          let res = algo x0 FlowEquations1 (CleverParseTable<ParserEvenCountBracketMagicEOF.token>(ParserEvenCountBracketMagicEOF.tables()))
          let mutable ans = Accept
-         //If the parser to add a special character EOF, then yacc starts correctly resolve the conflict. But our algorithm not 
-         //Our algo if LR(0), but fsyacc analyzer is LALR(1)      
+              
          try
             //just yacc for control
             let text = "(B)(B)"
@@ -103,6 +102,14 @@ type ``AbstractLALR parser tests`` () =
             ans <- Error
          
          Assert.AreNotEqual (res, ans) 
+    [<Test>]
+    member this.``The an even number of brackets last reduce test`` () = 
+        let a = AbstractStack(0) + AbstractStack(2)
+        let tables = CleverParseTable<ParserEvenCountBracketMagicEOF.token>(ParserEvenCountBracketMagicEOF.tables())
+        let t = reduce tables 2 a true
+        for e in t do 
+            Assert.AreEqual((tables.isAccept e.topState) , true)
+
     [<Test>]
     member this.``Simple Calc`` ()=
         let FlowEquations1 =  new Dictionary<string, Expression<ParserSimpleCalc.token>>()
@@ -198,5 +205,7 @@ t.``[a]-matching test`` ()
 t.``The correct bracket sequence without left bracket``()
 t.AbstractStack()
 t.``The an even number of brackets: Example (b)(b) or (b)(b)(b)(b) Magic EOF``()
+t.``The an even number of brackets last reduce test``()
+t.``The an even number of brackets last reduce test``()
 t.``Simple Calc``()
 t.``Full Calc``()

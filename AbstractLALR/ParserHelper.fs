@@ -82,17 +82,21 @@ type CleverParseTable<'T>(tables: Microsoft.FSharp.Text.Parsing.Tables<'T>) =
         let newState = actionValue action
         newState
 
-    member this.action state = int (tables.immediateActions.[state])
-        
-    member this.production state = 
-        let prod = actionValue (this.action state)
+    member this.action state last = 
+        if not last then
+            int (tables.immediateActions.[state])
+        else 
+            actionTable.Read(state, tables.endOfInputTag )
+
+    member this.production state last = 
+        let prod = actionValue (this.action state last)
         prod
 
-    member this.reductionSymbolCount state =
-        let n = int (tables.reductionSymbolCounts.[this.production state])
+    member this.reductionSymbolCount state last =
+        let n = int (tables.reductionSymbolCounts.[this.production state last])
         n
 
-    member this.gotoNonTerminal state t = gotoTable.Read(int (tables.productionToNonTerminalTable.[(this.production t)]), state)
+    member this.gotoNonTerminal state t last = gotoTable.Read(int (tables.productionToNonTerminalTable.[(this.production t last)]), state)
 
     member this.isAccept state = 
             let immediateAction = int (tables.immediateActions.[state])
@@ -108,4 +112,7 @@ type CleverParseTable<'T>(tables: Microsoft.FSharp.Text.Parsing.Tables<'T>) =
                 if (actionKind action) = acceptFlag then
                     flag <- true
                 flag  
+
+    member this.isReduce state last =
+          (actionKind (this.action state last)) = reduceFlag
 

@@ -1,0 +1,244 @@
+Output file describing compiled parser placed in ParserIfElse.fs and ParserIfElse.fsi
+------------------------
+states = 
+state 0:
+  items:
+    _startS ->  . S
+
+  actions:
+    action 'OTHER' (noprec):   shift 10
+    action 'THEN' (noprec):   error
+    action 'EXPR' (noprec):   error
+    action 'ELSE' (noprec):   error
+    action 'IF' (noprec):   shift 5
+    action 'error' (noprec):   error
+    action '#' (noprec):   error
+    action '$$' (noprec):   error
+
+  immediate action: <none>
+ gotos:
+    goto S: 1
+    goto MS: 2
+    goto US: 4
+
+state 1:
+  items:
+    _startS -> S . 
+
+  actions:
+    action 'OTHER' (noprec):   accept
+    action 'THEN' (noprec):   accept
+    action 'EXPR' (noprec):   accept
+    action 'ELSE' (noprec):   accept
+    action 'IF' (noprec):   accept
+    action 'error' (noprec):   accept
+    action '#' (noprec):   accept
+    action '$$' (noprec):   accept
+
+  immediate action:   accept
+ gotos:
+
+state 2:
+  items:
+    S -> MS . 
+
+  actions:
+    action 'OTHER' (noprec):   reduce S --> MS
+    action 'THEN' (noprec):   reduce S --> MS
+    action 'EXPR' (noprec):   reduce S --> MS
+    action 'ELSE' (noprec):   reduce S --> MS
+    action 'IF' (noprec):   reduce S --> MS
+    action 'error' (noprec):   reduce S --> MS
+    action '#' (noprec):   reduce S --> MS
+    action '$$' (noprec):   reduce S --> MS
+
+  immediate action:   reduce S --> MS
+ gotos:
+
+state 3:
+  items:
+    S -> MS . 
+    MS -> 'IF' 'EXPR' 'THEN' MS . 'ELSE' MS
+    US -> 'IF' 'EXPR' 'THEN' MS . 'ELSE' US
+
+  actions:
+    action 'OTHER' (noprec):   reduce S --> MS
+    action 'THEN' (noprec):   reduce S --> MS
+    action 'EXPR' (noprec):   reduce S --> MS
+    action 'ELSE' (noprec):   shift 8
+    action 'IF' (noprec):   reduce S --> MS
+    action 'error' (noprec):   reduce S --> MS
+    action '#' (noprec):   reduce S --> MS
+    action '$$' (noprec):   reduce S --> MS
+
+  immediate action: <none>
+ gotos:
+
+state 4:
+  items:
+    S -> US . 
+
+  actions:
+    action 'OTHER' (noprec):   reduce S --> US
+    action 'THEN' (noprec):   reduce S --> US
+    action 'EXPR' (noprec):   reduce S --> US
+    action 'ELSE' (noprec):   reduce S --> US
+    action 'IF' (noprec):   reduce S --> US
+    action 'error' (noprec):   reduce S --> US
+    action '#' (noprec):   reduce S --> US
+    action '$$' (noprec):   reduce S --> US
+
+  immediate action:   reduce S --> US
+ gotos:
+
+state 5:
+  items:
+    MS -> 'IF' . 'EXPR' 'THEN' MS 'ELSE' MS
+    US -> 'IF' . 'EXPR' 'THEN' S
+    US -> 'IF' . 'EXPR' 'THEN' MS 'ELSE' US
+
+  actions:
+    action 'OTHER' (noprec):   error
+    action 'THEN' (noprec):   error
+    action 'EXPR' (noprec):   shift 6
+    action 'ELSE' (noprec):   error
+    action 'IF' (noprec):   error
+    action 'error' (noprec):   error
+    action '#' (noprec):   error
+    action '$$' (noprec):   error
+
+  immediate action: <none>
+ gotos:
+
+state 6:
+  items:
+    MS -> 'IF' 'EXPR' . 'THEN' MS 'ELSE' MS
+    US -> 'IF' 'EXPR' . 'THEN' S
+    US -> 'IF' 'EXPR' . 'THEN' MS 'ELSE' US
+
+  actions:
+    action 'OTHER' (noprec):   error
+    action 'THEN' (noprec):   shift 7
+    action 'EXPR' (noprec):   error
+    action 'ELSE' (noprec):   error
+    action 'IF' (noprec):   error
+    action 'error' (noprec):   error
+    action '#' (noprec):   error
+    action '$$' (noprec):   error
+
+  immediate action: <none>
+ gotos:
+
+state 7:
+  items:
+    MS -> 'IF' 'EXPR' 'THEN' . MS 'ELSE' MS
+    US -> 'IF' 'EXPR' 'THEN' . S
+    US -> 'IF' 'EXPR' 'THEN' . MS 'ELSE' US
+
+  actions:
+    action 'OTHER' (noprec):   shift 10
+    action 'THEN' (noprec):   error
+    action 'EXPR' (noprec):   error
+    action 'ELSE' (noprec):   error
+    action 'IF' (noprec):   shift 5
+    action 'error' (noprec):   error
+    action '#' (noprec):   error
+    action '$$' (noprec):   error
+
+  immediate action: <none>
+ gotos:
+    goto S: 11
+    goto MS: 3
+    goto US: 4
+
+state 8:
+  items:
+    MS -> 'IF' 'EXPR' 'THEN' MS 'ELSE' . MS
+    US -> 'IF' 'EXPR' 'THEN' MS 'ELSE' . US
+
+  actions:
+    action 'OTHER' (noprec):   shift 10
+    action 'THEN' (noprec):   error
+    action 'EXPR' (noprec):   error
+    action 'ELSE' (noprec):   error
+    action 'IF' (noprec):   shift 5
+    action 'error' (noprec):   error
+    action '#' (noprec):   error
+    action '$$' (noprec):   error
+
+  immediate action: <none>
+ gotos:
+    goto MS: 9
+    goto US: 12
+
+state 9:
+  items:
+    MS -> 'IF' 'EXPR' 'THEN' MS 'ELSE' MS . 
+
+  actions:
+    action 'OTHER' (noprec):   reduce MS --> 'IF' 'EXPR' 'THEN' MS 'ELSE' MS
+    action 'THEN' (noprec):   reduce MS --> 'IF' 'EXPR' 'THEN' MS 'ELSE' MS
+    action 'EXPR' (noprec):   reduce MS --> 'IF' 'EXPR' 'THEN' MS 'ELSE' MS
+    action 'ELSE' (noprec):   reduce MS --> 'IF' 'EXPR' 'THEN' MS 'ELSE' MS
+    action 'IF' (noprec):   reduce MS --> 'IF' 'EXPR' 'THEN' MS 'ELSE' MS
+    action 'error' (noprec):   reduce MS --> 'IF' 'EXPR' 'THEN' MS 'ELSE' MS
+    action '#' (noprec):   reduce MS --> 'IF' 'EXPR' 'THEN' MS 'ELSE' MS
+    action '$$' (noprec):   reduce MS --> 'IF' 'EXPR' 'THEN' MS 'ELSE' MS
+
+  immediate action:   reduce MS --> 'IF' 'EXPR' 'THEN' MS 'ELSE' MS
+ gotos:
+
+state 10:
+  items:
+    MS -> 'OTHER' . 
+
+  actions:
+    action 'OTHER' (noprec):   reduce MS --> 'OTHER'
+    action 'THEN' (noprec):   reduce MS --> 'OTHER'
+    action 'EXPR' (noprec):   reduce MS --> 'OTHER'
+    action 'ELSE' (noprec):   reduce MS --> 'OTHER'
+    action 'IF' (noprec):   reduce MS --> 'OTHER'
+    action 'error' (noprec):   reduce MS --> 'OTHER'
+    action '#' (noprec):   reduce MS --> 'OTHER'
+    action '$$' (noprec):   reduce MS --> 'OTHER'
+
+  immediate action:   reduce MS --> 'OTHER'
+ gotos:
+
+state 11:
+  items:
+    US -> 'IF' 'EXPR' 'THEN' S . 
+
+  actions:
+    action 'OTHER' (noprec):   reduce US --> 'IF' 'EXPR' 'THEN' S
+    action 'THEN' (noprec):   reduce US --> 'IF' 'EXPR' 'THEN' S
+    action 'EXPR' (noprec):   reduce US --> 'IF' 'EXPR' 'THEN' S
+    action 'ELSE' (noprec):   reduce US --> 'IF' 'EXPR' 'THEN' S
+    action 'IF' (noprec):   reduce US --> 'IF' 'EXPR' 'THEN' S
+    action 'error' (noprec):   reduce US --> 'IF' 'EXPR' 'THEN' S
+    action '#' (noprec):   reduce US --> 'IF' 'EXPR' 'THEN' S
+    action '$$' (noprec):   reduce US --> 'IF' 'EXPR' 'THEN' S
+
+  immediate action:   reduce US --> 'IF' 'EXPR' 'THEN' S
+ gotos:
+
+state 12:
+  items:
+    US -> 'IF' 'EXPR' 'THEN' MS 'ELSE' US . 
+
+  actions:
+    action 'OTHER' (noprec):   reduce US --> 'IF' 'EXPR' 'THEN' MS 'ELSE' US
+    action 'THEN' (noprec):   reduce US --> 'IF' 'EXPR' 'THEN' MS 'ELSE' US
+    action 'EXPR' (noprec):   reduce US --> 'IF' 'EXPR' 'THEN' MS 'ELSE' US
+    action 'ELSE' (noprec):   reduce US --> 'IF' 'EXPR' 'THEN' MS 'ELSE' US
+    action 'IF' (noprec):   reduce US --> 'IF' 'EXPR' 'THEN' MS 'ELSE' US
+    action 'error' (noprec):   reduce US --> 'IF' 'EXPR' 'THEN' MS 'ELSE' US
+    action '#' (noprec):   reduce US --> 'IF' 'EXPR' 'THEN' MS 'ELSE' US
+    action '$$' (noprec):   reduce US --> 'IF' 'EXPR' 'THEN' MS 'ELSE' US
+
+  immediate action:   reduce US --> 'IF' 'EXPR' 'THEN' MS 'ELSE' US
+ gotos:
+
+
+startStates = 0
+------------------------

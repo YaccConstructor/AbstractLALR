@@ -198,6 +198,32 @@ type ``AbstractLALR parser tests`` () =
         let res2 = algo x2 FlowEquations1 (CleverParseTable<ParserCalc.token>(ParserCalc.tables()))
         Assert.AreEqual (res2, Accept)
 
+    [<Test>]
+     member this.``If Else Test `` ()=
+        let FlowEquations1 = new Dictionary<string, Expression<ParserIfElse.token>>()
+
+        FlowEquations1.Add("IF", Value(ParserIfElse.IF)) |> ignore
+        FlowEquations1.Add("ELSE" , Value(ParserIfElse.ELSE)) |> ignore 
+        FlowEquations1.Add("THEN" , Value(ParserIfElse.THEN)) |> ignore 
+        FlowEquations1.Add("OTHER" , Value(ParserIfElse.OTHER)) |> ignore 
+        FlowEquations1.Add("EXPR" , Value(ParserIfElse.EXPR)) |> ignore 
+
+        FlowEquations1.Add("X1" , Var("IF") +. Var("EXPR") +. Var("THEN") +. Var("OTHER") +. Var("ELSE") +. Var("OTHER")) |> ignore 
+        let x0 =  Call(FlowExpression("X1", FlowEquations1.["X1"]), 0)
+        let res = algo x0 FlowEquations1 (CleverParseTable<ParserIfElse.token>(ParserIfElse.tables()))
+        Assert.AreEqual (res, Accept)
+
+        FlowEquations1.Add("X2" , Var("IF") +. Var("EXPR") +. Var("THEN") +. Var("OTHER") ) |> ignore 
+        let x0 =  Call(FlowExpression("X2", FlowEquations1.["X2"]), 0)
+        let res = algo x0 FlowEquations1 (CleverParseTable<ParserIfElse.token>(ParserIfElse.tables()))
+        Assert.AreEqual (res, Error)
+
+        //last reduce
+        let a = AbstractStack(getState x0) + AbstractStack(5) + AbstractStack(6)  + AbstractStack(7) + AbstractStack(3)
+        let tables = CleverParseTable<ParserIfElse.token>(ParserIfElse.tables())
+        let t = reduce tables 3 a true
+        for e in t do 
+            Assert.AreEqual((tables.isAccept e.topState) , true)
 
 let t = new ``AbstractLALR parser tests`` () 
 t.``The correct bracket sequence``() 
@@ -209,3 +235,4 @@ t.``The an even number of brackets last reduce test``()
 t.``The an even number of brackets last reduce test``()
 t.``Simple Calc``()
 t.``Full Calc``()
+t.``If Else Test ``()

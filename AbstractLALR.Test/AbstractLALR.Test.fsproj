@@ -81,6 +81,7 @@
     <Compile Include="Lexer.fs" />
     <Compile Include="ParserSimpleCalc.fs" />
     <Compile Include="ParserCalc.fs" />
+    <Compile Include="ParserIfElse.fs" />
     <Compile Include="test.fs" />
     <None Include="packages.config" />
   </ItemGroup>

@@ -1,0 +1,21 @@
+%{
+%}
+
+%token IF
+%token ELSE
+%token EXPR
+%token THEN
+%token OTHER
+
+
+
+%start S
+%type <int> S
+
+%%
+
+
+
+S: MS {1} | US {1}
+MS: IF EXPR THEN MS ELSE MS {1} | OTHER {1}
+US: IF EXPR THEN S {1} | IF EXPR THEN MS ELSE US {1}
